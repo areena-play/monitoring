@@ -1,46 +1,15 @@
-Installing Uptime Kuma on a Netcup VPS
---------------------------------------
+# Installing Uptime Kuma on a VPS
 
-# install docker
+## install docker
+```bash
 curl -fsSL https://get.docker.com | sudo sh
+```
 
-# create the uptime-kuma folder and add the docker-compose.yml and Caddyfile
-mkdir uptime-kuma
+## create the folder
+create the uptime-kuma folder and add the docker-compose.yml and Caddyfile below
 
-# docker-compose.yml
-services:
-  uptime-kuma:
-    image: louislam/uptime-kuma:1
-    container_name: uptime-kuma
-    volumes:
-      - uptime-kuma-data:/app/data
-    restart: always
-    # We don't expose ports here; Caddy handles the public-facing ports.
+## docker-compose.yml
+Use the provided docker-compose file
 
-  caddy:
-    image: caddy:2
-    container_name: caddy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data
-      - caddy-config:/config
-    restart: always
-    depends_on:
-      - uptime-kuma
-
-volumes:
-  uptime-kuma-data:
-  caddy-data:
-  caddy-config:
-
-
-
-
-
-# Caddyfile
-status.areena.ch {
-    reverse_proxy uptime-kuma:3001
-}
+## Caddyfile
+Use the provided Caddyfile
