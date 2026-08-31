@@ -6,10 +6,15 @@ curl -fsSL https://get.docker.com | sudo sh
 ```
 
 ## create the folder
-create the uptime-kuma folder and add the docker-compose.yml and Caddyfile below
+create the monitoring folder and add the docker-compose.yml, loki-config.yaml and Caddyfile below
 
-## docker-compose.yml
-Use the provided docker-compose file
+## Create a password hash for Caddy
+```bash
+docker run --rm caddy:2-alpine caddy hash-password --plaintext "YourSecretShipperPasswordHere"
+```
+Paste the generated hash in the Caddyfile
 
-## Caddyfile
-Use the provided Caddyfile
+## start docker
+```bash
+docker compose up -d
+```

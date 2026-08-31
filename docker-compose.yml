@@ -1,27 +1,62 @@
 services:
-  uptime-kuma:
-    image: louislam/uptime-kuma:1
-    container_name: uptime-kuma
-    volumes:
-      - uptime-kuma-data:/app/data
-    restart: always
-    # We don't expose ports here; Caddy handles the public-facing ports.
-
+  # ----------------------------------------------------------------------
+  # 1. REVERSE PROXY & AUTOMATED SSL (Caddy)
+  # ----------------------------------------------------------------------
   caddy:
-    image: caddy:2
-    container_name: caddy
+    image: caddy:2-alpine
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp" # HTTP/3 QUIC
+    environment:
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-admin@areena.ch}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
-    restart: always
     depends_on:
+      - grafana
+      - loki
       - uptime-kuma
 
+  # ----------------------------------------------------------------------
+  # 2. STATUS MONITORING (Uptime Kuma - ~80 MB RAM)
+  # ----------------------------------------------------------------------
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    volumes:
+      - uptime-kuma-data:/app/data
+
+  # ----------------------------------------------------------------------
+  # 3. LOG STORAGE & INDEXER (Grafana Loki - ~120 MB RAM)
+  # ----------------------------------------------------------------------
+  loki:
+    image: grafana/loki:3.0.0
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+
+  # ----------------------------------------------------------------------
+  # 4. LOG EXPLORER & DASHBOARDS (Grafana - ~80 MB RAM)
+  # ----------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      - GF_SERVER_ROOT_URL=https://logs.areena.ch
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+
 volumes:
-  uptime-kuma-data:
   caddy-data:
   caddy-config:
+  uptime-kuma-data:
+  loki-data:
+  grafana-data:
