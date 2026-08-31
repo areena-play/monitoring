@@ -18,3 +18,6 @@ Paste the generated hash in the Caddyfile
 ```bash
 docker compose up -d
 ```
+
+## init
+Configure the uptime kuma monitoring and grafana to your liking. Grafana default credentials are admin:admin
